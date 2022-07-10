@@ -65,7 +65,7 @@ fn dot(x : &[f64], y : &[f64]) -> f64{
 }
 
 
-fn cgsolve(cids : &[usize], offs : &[usize], vals : &[f64], b : &[f64], r : &mut [f64], p : &mut [f64], ap : &mut[f64], x : &mut [f64]){
+fn cgsolve(cids : &[usize], offs : &[usize], vals : &[f64], b : &[f64], r : &mut [f64], p : &mut [f64], ap : &mut[f64], x : &mut [f64]) -> f64{
     let tol = 1e-8;
     //Set r = b - A*x 
     csr_eval(cids,offs,vals,x,r);
@@ -95,8 +95,8 @@ fn cgsolve(cids : &[usize], offs : &[usize], vals : &[f64], b : &[f64], r : &mut
             *pi=ri+beta*(*pi);
         }
         rho = dot(r,r);
-        println!("res = {}",rho.sqrt());
     }
+    rho.sqrt()
 }
 
 
@@ -115,7 +115,8 @@ fn main() {
         let mut r = vec![0.0;m];
         let mut p = vec![0.0;m];
         let mut ap = vec![0.0;m];
-        cgsolve(&cids,&offs,&vals,&b,&mut r,&mut p,&mut ap,&mut x);
+        let res = cgsolve(&cids,&offs,&vals,&b,&mut r,&mut p,&mut ap,&mut x);
+        println!("res : {}",res);
     }
     else{
         println!("Usage: ./main mx my mz");

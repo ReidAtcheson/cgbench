@@ -71,7 +71,7 @@ double dot(const std::vector<double>& x,const std::vector<double>& y){
   return out;
 }
 
-void cgsolve(const std::vector<size_t>& cids,
+double cgsolve(const std::vector<size_t>& cids,
     const std::vector<size_t>& offs,
     const std::vector<double>& vals,
     const std::vector<double>& b,
@@ -108,9 +108,8 @@ void cgsolve(const std::vector<size_t>& cids,
       p[i]=r[i]+beta*p[i];
     }
     rho=dot(r,r);
-    std::cout<<"res = "<<std::sqrt(rho)<<"\n";
   }
-
+  return std::sqrt(rho);
 }
 
 
@@ -126,7 +125,8 @@ int main(int argc,char** argv){
     std::vector<double> r(mx*my*mz,0.0);
     std::vector<double> p(mx*my*mz,0.0);
     std::vector<double> ap(mx*my*mz,0.0);
-    cgsolve(std::get<0>(mat),std::get<1>(mat),std::get<2>(mat),b,r,p,ap,x);
+    double res = cgsolve(std::get<0>(mat),std::get<1>(mat),std::get<2>(mat),b,r,p,ap,x);
+    std::cout<<"res = " << res << "\n";
   }
   else{
     std::cout<<"Usage: "<<argv[0]<<" <mx> <my> <mz>\n";
