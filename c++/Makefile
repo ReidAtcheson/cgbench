@@ -2,6 +2,7 @@
 
 
 CXXFLAGS += -O3
+#CXXFLAGS += -g
 
 
 

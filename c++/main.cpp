@@ -1,5 +1,7 @@
 #include <vector>
 #include <tuple>
+#include <cmath>
+#include <iostream>
 
 using size_t = std::size_t;
 //Makes a CSR format sparse matrix out of a 3D laplacian
@@ -40,6 +42,7 @@ std::tuple<std::vector<size_t>,std::vector<size_t>,std::vector<double>> make_mat
         if(iz<mz-1){
             add_nonzero(ix,iy,iz+1,-1.0);
         }
+        offs.push_back(off);
       }
     }
   }
@@ -68,9 +71,67 @@ double dot(const std::vector<double>& x,const std::vector<double>& y){
   return out;
 }
 
+void cgsolve(const std::vector<size_t>& cids,
+    const std::vector<size_t>& offs,
+    const std::vector<double>& vals,
+    const std::vector<double>& b,
+    std::vector<double>& r,
+    std::vector<double>& p,
+    std::vector<double>& ap,
+    std::vector<double>& x){
+
+  double tol = 1e-8;
+  //Set r = b - Ax
+  csr_eval(cids,offs,vals,x,r);
+  for(size_t i=0;i<r.size();i++){
+    r[i] = b[i] - r[i];
+  }
+  //Set p = r
+  for(size_t i=0;i<p.size();i++){
+    p[i]=r[i];
+  }
+  double rho = dot(r,r);
+  while(std::sqrt(rho) > tol){
+    csr_eval(cids,offs,vals,p,ap);
+    double rdotr = rho;
+    double pdotap = dot(p,ap);
+    double alpha = rdotr/pdotap;
+    for(size_t i=0;i<p.size();i++){
+      x[i]+=alpha*p[i];
+    }
+    for(size_t i=0;i<p.size();i++){
+      r[i]-=alpha*ap[i];
+    }
+    double rpdotrp = dot(r,r);
+    double beta = rpdotrp/rdotr;
+    for(size_t i=0;i<p.size();i++){
+      p[i]=r[i]+beta*p[i];
+    }
+    rho=dot(r,r);
+    std::cout<<"res = "<<std::sqrt(rho)<<"\n";
+  }
+
+}
+
 
 
 int main(int argc,char** argv){
+  if(argc==4){
+    size_t mx = std::stoi(argv[1]);
+    size_t my = std::stoi(argv[2]);
+    size_t mz = std::stoi(argv[3]);
+    std::tuple<std::vector<size_t>,std::vector<size_t>,std::vector<double>> mat = make_matrix(mx,my,mz);
+    std::vector<double> x(mx*my*mz,0.0);
+    std::vector<double> b(mx*my*mz,1.0);
+    std::vector<double> r(mx*my*mz,0.0);
+    std::vector<double> p(mx*my*mz,0.0);
+    std::vector<double> ap(mx*my*mz,0.0);
+    cgsolve(std::get<0>(mat),std::get<1>(mat),std::get<2>(mat),b,r,p,ap,x);
+  }
+  else{
+    std::cout<<"Usage: "<<argv[0]<<" <mx> <my> <mz>\n";
+    return 1;
+  }
 }
 
 
